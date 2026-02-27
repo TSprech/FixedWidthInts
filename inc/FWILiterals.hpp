@@ -15,11 +15,17 @@
 #include <limits>
 #include <stdexcept>
 
+namespace detail {
+    // Declared but intentionally NOT defined, and NOT marked constexpr
+    // Calling this inside a consteval function forces a hard compile error
+    void fixed_width_integer_literal_out_of_range();
+}
+
 // Macro to define the literal suffixes and perform the compile time bounds checking
 #define FIXED_WIDTH_INT_LITERALS_SUFFIX(suffix, type_name)                              \
   consteval type_name operator""##suffix(unsigned long long val) {                      \
     if (val > static_cast<unsigned long long>(std::numeric_limits<type_name>::max())) { \
-      throw std::out_of_range("Literal value out of range for type: " #type_name);      \
+      detail::fixed_width_integer_literal_out_of_range();      \
     }                                                                                   \
     return static_cast<type_name>(val);                                                 \
   }
@@ -38,8 +44,8 @@ namespace fwil::literals {
     FIXED_WIDTH_INT_LITERALS_SUFFIX(_i64, std::int64_t)
     // Other
     FIXED_WIDTH_INT_LITERALS_SUFFIX(_z,   std::size_t)
-  // clang-format on
-}  // namespace fixed_width_int_literals::literals
+    // clang-format on
+} // namespace fixed_width_int_literals::literals
 
 #undef FIXED_WIDTH_INT_LITERALS_SUFFIX
 
